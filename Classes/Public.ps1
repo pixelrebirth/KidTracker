@@ -15,41 +15,10 @@ class User {
 	}
 }
 
-# class TaskUnit {
-# 	[string]$Title
-# 	[string]$Description
-# 	[ValidateSet("open","closed")]$State
-# 	[ValidateSet("todo","habit","daily","reward","task","allowance","consequence")]$Type
-# 	[ValidatePattern('M|Tu|W|Th|F|Sa|Su')]$DayPattern
-# 	[int]$Points
-# 	[bool]$Negative
-# 	[int]$Stage
-# 	[string]$UserName
-
-# 	[ValidatePattern('^\d+\.\d\d$')]$Dollars
-# 	[datetime]$DateCreated
-# 	[datetime]$DateDue
-# 	[datetime]$PauseStart
-# 	[datetime]$PauseEnd
-# 	[datetime]$SubmitDateTime
-# 	[int]$Streak
-
-# 	TaskUnit ($Data) {
-# 		$this.type = $Data.TaskUnit_Type
-# 		$this.Title = $Data.Title
-# 		$this.Description = $Data.Description
-# 		if ($Data.DayPattern){$this.DayPattern = $Data.DayPattern.split(',')}
-# 		$this.Points = $Data.Points
-# 		$this.Negative = $Data.Negative
-# 		$this.Stage = $Data.Stage
-# 	}
-# }
-
 class Database {
 	$FilePath
 	$Connection
 	$Document
-	$Queue
 
 	Database ($FilePath, [PSCredential]$Credential) {
 		$this.FilePath = $FilePath
@@ -68,7 +37,7 @@ class Database {
 	}
 
 	[void] WriteAllUserTaskUnitsFromFile () {
-		$FileCollection = Get-Content "$PSScriptRoot/../TaskUnit_Config.json" | ConvertFrom-Json
+		$FileCollection = Get-Content "$PSScriptRoot/../Configs/TaskUnit_Config.json" | ConvertFrom-Json
 		Remove-LiteDBCollection -Collection "AllUserTaskUnits" -Connection $this.Connection -Confirm:$False
 		$this.NewCollection("AllUserTaskUnits")
 
@@ -89,7 +58,7 @@ class Database {
 	}
 
 	[void] WriteUserTrackerFromFile () {
-		$FileConfig = Get-Content "$PSScriptRoot/../User_Base_Config.json" | ConvertFrom-Json
+		$FileConfig = Get-Content "$PSScriptRoot/../Configs/User_Base_Config.json" | ConvertFrom-Json
 		Remove-LiteDBCollection -Collection "UserTracker" -Connection $this.connection -Confirm:$False
 		$this.NewCollection("UserTracker")
 
@@ -105,16 +74,57 @@ class Database {
 		Add-LiteDBDocument -Collection "TransactionQueue" -Document $BSON -Connection $this.Connection
 	}
 
-	[void] ProcessQueue () {
-		# $this.Queue = Find-LiteDBDocument -Collection TransactionQueue -Connection $this.Connection
-		# foreach ($Item in $this.Queue | where name -eq $User.name) {
-		# 	switch ($Item.type){
-		# 		"habit" 		{$Item}
-		# 		"daily"			{$Item}
-		# 		"reward"		{$Item}
-		# 		"todo" 			{$Item}
-		# 		"consequence" 	{$Item}
-		# 	}
-		# }
+	[PSCustomObject] GetRecord ($TaskUnitId) {
+		return $this.Document | where {$_._id -eq $TaskUnitId}
 	}
+
+	[void] ProcessQueue () {
+		$this.GetCollection('AllUserTaskUnits')
+		$Queue = Find-LiteDBDocument -Collection "TransactionQueue" -Connection $this.Connection
+		
+		foreach ($Action in $Queue){
+			if ($Action.TaskUnitId){
+				$TaskUnit = $this.GetRecord($Action.TaskUnitId)
+				Write-Host "$TaskUnit Processing..."
+			}
+			else {
+				$TaskUnit = $Action
+				Write-Host "$TaskUnit Processing..."
+			}
+
+			switch ($TaskUnit.TaskUnit.Type){
+				"Habit" 		{$this.ProcessHabit($TaskUnit)}
+				"Daily"			{$this.ProcessDaily($TaskUnit)}
+				"Reward"		{$this.ProcessReward($TaskUnit)}
+				"Todo" 			{$this.ProcessTodo($TaskUnit)}
+				"Consequence" 	{$this.ProcessConsequence($TaskUnit)}
+				"Allowance" 	{$this.ProcessAllowance($TaskUnit)}
+			}
+		}
+	}
+
+	[void] ProcessHabit ($TaskUnit) {
+
+	}
+	
+	[void] ProcessDaily ($TaskUnit) {
+
+	}
+	
+	[void] ProcessReward ($TaskUnit) {
+
+	}
+	
+	[void] ProcessTodo ($TaskUnit) {
+
+	}
+	
+	[void] ProcessConsequence ($TaskUnit) {
+
+	}
+	
+	[void] ProcessAllowance ($TaskUnit) {
+
+	}
+	
 }

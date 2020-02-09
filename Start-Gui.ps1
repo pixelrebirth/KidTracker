@@ -122,7 +122,7 @@ function AddItem ($Item, $AllTaskUnits){
     $ItemToSubmit = $Null
     $ItemToSubmit = $AllTaskUnits | where {$_.TaskUnits.Title -eq $Item}
 
-    $AllItemsToSubmit += $ItemToSubmit
+    return $ItemToSubmit
 }
 
 function Submit ($Database, $Dailies, $Habits, $Todo, $Reward, $Kid) {
@@ -131,23 +131,23 @@ function Submit ($Database, $Dailies, $Habits, $Todo, $Reward, $Kid) {
 
     $AllItemsToSubmit = @()
     foreach ($Daily in $Dailies.SelectedItems){
-        AddItem $Daily $AllTaskUnits
+        $AllItemsToSubmit += AddItem $Daily $AllTaskUnits
     }
 
     foreach ($EachHabit in $Habits.SelectedItems){
-        AddItem $EachHabit $AllTaskUnits
+        $AllItemsToSubmit += AddItem $EachHabit $AllTaskUnits
     }
 
     foreach ($Task in $Todo.SelectedItems){
-        AddItem $Task $AllTaskUnits
+        $AllItemsToSubmit += AddItem $Task $AllTaskUnits
     }
 
     foreach ($EachReward in $Reward.SelectedItems){
-        AddItem $EachReward $AllTaskUnits
+        $AllItemsToSubmit += AddItem $EachReward $AllTaskUnits
     }
 
     foreach ($Item in $AllItemsToSubmit){
-        write-host $Item._id
+        Write-Host $Item._id
         $Database.AddTaskUnitToQueue($Item._id)
     }
 
