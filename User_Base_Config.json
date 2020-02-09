@@ -1,0 +1,28 @@
+{
+    "Users": [
+        {
+            "Name": "Adakai",
+            "RewardPoints": 20,
+            "Allowance": 120,
+            "Consequence": ["None"]
+        },
+        {
+            "Name": "Lunabella",
+            "RewardPoints": 20,
+            "Allowance": 20,
+            "Consequence": ["None"]
+        },
+        {
+            "Name": "Natalie",
+            "RewardPoints": 20,
+            "Allowance": 20,
+            "Consequence": ["None"]
+        },
+        {
+            "Name": "Claire",
+            "RewardPoints": 20,
+            "Allowance": 50,
+            "Consequence": ["None"]
+        }
+    ]
+}
