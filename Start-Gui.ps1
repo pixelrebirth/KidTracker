@@ -6,7 +6,7 @@ Import-Module pslitedb
 . $PSScriptRoot/Classes/Public.ps1
 
 $Credential = Get-Credential -message "Database Credential for $FilePath"
-$Database = New-Object Database -ArgumentList ('./test.db',$Credential)
+$Database = New-Object Database -ArgumentList ('./Databases/test.db',$Credential)
 
 Add-Type -AssemblyName System.Windows.Forms
 [System.Windows.Forms.Application]::EnableVisualStyles()
