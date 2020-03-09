@@ -84,47 +84,47 @@ class Database {
 		
 		foreach ($Action in $Queue){
 			if ($Action.TaskUnitId){
-				$TaskUnit = $this.GetRecord($Action.TaskUnitId)
-				Write-Host "$TaskUnit Processing..."
+				$TaskUnit = ($this.Document | ? {$_._id -eq $Action.TaskUnitId}).taskunits
+				Write-Host "$TaskUnit"
 			}
 			else {
 				$TaskUnit = $Action
-				Write-Host "$TaskUnit Processing..."
+				Write-Host "$TaskUnit"
 			}
 
-			switch ($TaskUnit.TaskUnit.Type){
-				"Habit" 		{$this.ProcessHabit($TaskUnit)}
-				"Daily"			{$this.ProcessDaily($TaskUnit)}
-				"Reward"		{$this.ProcessReward($TaskUnit)}
-				"Todo" 			{$this.ProcessTodo($TaskUnit)}
-				"Consequence" 	{$this.ProcessConsequence($TaskUnit)}
-				"Allowance" 	{$this.ProcessAllowance($TaskUnit)}
+			switch ($TaskUnit.taskunit_type){
+				"habit" 		{$this.ProcessHabit($TaskUnit)}
+				"daily"			{$this.ProcessDaily($TaskUnit)}
+				"reward"		{$this.ProcessReward($TaskUnit)}
+				"todo" 			{$this.ProcessTodo($TaskUnit)}
+				"consequence" 	{$this.ProcessConsequence($TaskUnit)}
+				"allowance" 	{$this.ProcessAllowance($TaskUnit)}
 			}
 		}
 	}
 
 	[void] ProcessHabit ($TaskUnit) {
-
-	}
 	
+	}
+
 	[void] ProcessDaily ($TaskUnit) {
 
 	}
-	
+
 	[void] ProcessReward ($TaskUnit) {
 
 	}
-	
+
 	[void] ProcessTodo ($TaskUnit) {
 
 	}
-	
+
 	[void] ProcessConsequence ($TaskUnit) {
 
 	}
-	
+
 	[void] ProcessAllowance ($TaskUnit) {
 
 	}
-	
+
 }

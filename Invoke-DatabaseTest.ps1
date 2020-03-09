@@ -5,8 +5,7 @@ param (
 Import-Module pslitedb
 . $PSScriptRoot/Classes/Public.ps1
 
-# Remove-Item ./test.db -Force
-$Credential = Get-Credential -message "Database Credential for $FilePath"
+$Credential = Get-StoredCredential -WarningAction 0 | ? username -eq "testdb"
 $Database = New-Object Database -ArgumentList ($FilePath,$Credential)
 
 $Database.GetCollection("TransactionQueue")

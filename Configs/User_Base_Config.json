@@ -3,25 +3,25 @@
         {
             "Name": "Adakai",
             "RewardPoints": 20,
-            "Allowance": 120,
+            "Allowance": 0,
             "Consequence": ["None"]
         },
         {
             "Name": "Lunabella",
             "RewardPoints": 20,
-            "Allowance": 20,
+            "Allowance": 10,
             "Consequence": ["None"]
         },
         {
             "Name": "Natalie",
             "RewardPoints": 20,
-            "Allowance": 20,
+            "Allowance": 10,
             "Consequence": ["None"]
         },
         {
             "Name": "Claire",
             "RewardPoints": 20,
-            "Allowance": 50,
+            "Allowance": 40,
             "Consequence": ["None"]
         }
     ]
