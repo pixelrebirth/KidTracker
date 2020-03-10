@@ -19,6 +19,7 @@ class Database {
 	$FilePath
 	$Connection
 	$Document
+	$Users
 
 	Database ($FilePath, [PSCredential]$Credential) {
 		$this.FilePath = $FilePath
@@ -81,34 +82,61 @@ class Database {
 	[void] ProcessQueue () {
 		$this.GetCollection('AllUserTaskUnits')
 		$Queue = Find-LiteDBDocument -Collection "TransactionQueue" -Connection $this.Connection
+		$this.Users = Find-LiteDBDocument -Collection "UserTracker" -Connection $this.Connection
 		
 		foreach ($Action in $Queue){
 			if ($Action.TaskUnitId){
-				$TaskUnit = ($this.Document | ? {$_._id -eq $Action.TaskUnitId}).taskunits
-				Write-Host "$TaskUnit"
+				$TaskUnit = $this.Document | ? {$_._id -eq $Action.TaskUnitId}
+				Write-Host "$TaskUnit`: $($TaskUnit.taskunits)"
 			}
 			else {
 				$TaskUnit = $Action
-				Write-Host "$TaskUnit"
+				Write-Host "Raw $TaskUnit`: $($TaskUnit.taskunits)"
 			}
 
-			switch ($TaskUnit.taskunit_type){
+			switch ($TaskUnit.taskunits.taskunit_type){
 				"habit" 		{$this.ProcessHabit($TaskUnit)}
 				"daily"			{$this.ProcessDaily($TaskUnit)}
 				"reward"		{$this.ProcessReward($TaskUnit)}
 				"todo" 			{$this.ProcessTodo($TaskUnit)}
 				"consequence" 	{$this.ProcessConsequence($TaskUnit)}
 				"allowance" 	{$this.ProcessAllowance($TaskUnit)}
+				default			{
+					Remove-LiteDBDocument -Collection "TransactionQueue" -id $Action._id -Connection $this.Connection
+					Write-Error "Missing ID in AllUserTaskUnits: $($Action.TaskUnitId) - Removing from TransactionQueue"
+				}
 			}
 		}
 	}
 
+	[void] ProcessTransaction ($TaskUnitUser, $TaskUnit) {
+		try {
+			$UserBson = $TaskUnitUser | ConvertTo-LiteDbBSON
+			$TaskUnitBson = $TaskUnit | ConvertTo-LiteDbBSON
+			$id = $TaskUnitUser._id
+
+			Update-LiteDBDocument -Collection "UserTracker" -id $id -Document $UserBson -Connection $this.Connection
+			Add-LiteDBDocument -Collection "TransactionHistory" -Document $TaskUnitBson -Connection $this.Connection
+			Remove-LiteDBDocument -Collection "TransactionQueue" -id $TaskUnit._id -Connection $this.Connection
+
+			Write-Host "Completed Processing: $TaskUnit"
+		} 
+		catch {
+			Write-Error "Cannot update document with $TaskUnit"
+		}
+	}
+
 	[void] ProcessHabit ($TaskUnit) {
-	
+		$TaskUnitUser = $this.Users | ? {$_.name -eq $TaskUnit.name}
+		$TaskUnitUser.RewardPoints += $TaskUnit.taskunits.points
+
+		$this.ProcessTransaction($TaskUnitUser, $TaskUnit)
 	}
 
 	[void] ProcessDaily ($TaskUnit) {
+		$TaskUnitUser = $this.Users | ? {$_.name -eq $TaskUnit.name}
 
+		$this.ProcessTransaction($TaskUnitUser, $TaskUnit)
 	}
 
 	[void] ProcessReward ($TaskUnit) {
