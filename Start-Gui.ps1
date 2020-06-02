@@ -5,7 +5,7 @@
 Import-Module pslitedb
 . $PSScriptRoot/Classes/Public.ps1
 
-$Credential = Get-StoredCredential -WarningAction 0 | ? username -eq "testdb"
+$Credential = Get-StoredCredential -WarningAction 0 | ? username -eq "TestDatabase"
 $Database = New-Object Database -ArgumentList ('./Databases/test.db',$Credential)
 
 Add-Type -AssemblyName System.Windows.Forms

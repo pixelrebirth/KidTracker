@@ -3,6 +3,8 @@ class User {
     $RewardPoints
     $Consequence
 	$Allowance
+	$DailiesDue = 0
+	$DailiesDone = 0
 
 	UpdateUserTrackerCollection ([Database]$Database) {
 		$Document = $this | ConvertTo-LiteDbBSON
@@ -20,6 +22,7 @@ class Database {
 	$Connection
 	$Document
 	$Users
+	$Queue
 
 	Database ($FilePath, [PSCredential]$Credential) {
 		$this.FilePath = $FilePath
@@ -81,10 +84,14 @@ class Database {
 
 	[void] ProcessQueue () {
 		$this.GetCollection('AllUserTaskUnits')
-		$Queue = Find-LiteDBDocument -Collection "TransactionQueue" -Connection $this.Connection
+		$this.Queue = Find-LiteDBDocument -Collection "TransactionQueue" -Connection $this.Connection
 		$this.Users = Find-LiteDBDocument -Collection "UserTracker" -Connection $this.Connection
 		
-		foreach ($Action in $Queue){
+		foreach ($user in $this.users){
+			($this.users | ? name -eq $user.name).DailiesDue += ($this.Queue | where {$_.taskunits.taskunit_type -eq "daily"}).count
+		}
+
+		foreach ($Action in $this.Queue){
 			if ($Action.TaskUnitId){
 				$TaskUnit = $this.Document | ? {$_._id -eq $Action.TaskUnitId}
 				Write-Host "$TaskUnit`: $($TaskUnit.taskunits)"
@@ -107,17 +114,31 @@ class Database {
 				}
 			}
 		}
+
+		foreach ($user in $this.users){
+			if ($user.DailiesDue -ne $user.DailiesDone){
+				($this.users | ? name -eq $user.name).Consequence += 1
+			}
+			else {
+				($this.users | ? name -eq $user.name).Consequence = 0
+			}
+		}
+
+		foreach ($user in $this.users){
+			$Bson = $user | ConvertTo-LiteDbBSON
+			Update-LiteDBDocument -id $user._id -Document $Bson -Collection "UserTracker" -Connection $this.Connection
+		}
 	}
 
 	[void] ProcessTransaction ($TaskUnitUser, $TaskUnit) {
 		try {
 			$UserBson = $TaskUnitUser | ConvertTo-LiteDbBSON
-			$TaskUnitBson = $TaskUnit | ConvertTo-LiteDbBSON
+			$TaskUnitBson = $this.Queue | ? TaskUnitId -eq $TaskUnit._id | ConvertTo-LiteDbBSON
 			$id = $TaskUnitUser._id
 
 			Update-LiteDBDocument -Collection "UserTracker" -id $id -Document $UserBson -Connection $this.Connection
 			Add-LiteDBDocument -Collection "TransactionHistory" -Document $TaskUnitBson -Connection $this.Connection
-			Remove-LiteDBDocument -Collection "TransactionQueue" -id $TaskUnit._id -Connection $this.Connection
+			$this.Queue | ? TaskUnitId -eq $TaskUnit._id | Remove-LiteDBDocument -Collection "TransactionQueue" -Connection $this.Connection
 
 			Write-Host "Completed Processing: $TaskUnit"
 		} 
@@ -135,12 +156,16 @@ class Database {
 
 	[void] ProcessDaily ($TaskUnit) {
 		$TaskUnitUser = $this.Users | ? {$_.name -eq $TaskUnit.name}
+		$TaskUnitUser.DailiesDone += 1
 
 		$this.ProcessTransaction($TaskUnitUser, $TaskUnit)
 	}
 
 	[void] ProcessReward ($TaskUnit) {
+		$TaskUnitUser = $this.Users | ? {$_.name -eq $TaskUnit.name}
+		$TaskUnitUser.RewardPoints -= $TaskUnit.taskunits.points
 
+		$this.ProcessTransaction($TaskUnitUser, $TaskUnit)
 	}
 
 	[void] ProcessTodo ($TaskUnit) {

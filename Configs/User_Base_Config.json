@@ -4,25 +4,33 @@
             "Name": "Adakai",
             "RewardPoints": 20,
             "Allowance": 0,
-            "Consequence": ["None"]
+            "Consequence": 0,
+            "DailiesDue": 0,
+            "DailiesDone": 0
         },
         {
             "Name": "Lunabella",
             "RewardPoints": 20,
             "Allowance": 10,
-            "Consequence": ["None"]
+            "Consequence": 0,
+            "DailiesDue": 0,
+            "DailiesDone": 0
         },
         {
             "Name": "Natalie",
             "RewardPoints": 20,
             "Allowance": 10,
-            "Consequence": ["None"]
+            "Consequence": 0,
+            "DailiesDue": 0,
+            "DailiesDone": 0
         },
         {
             "Name": "Claire",
             "RewardPoints": 20,
             "Allowance": 40,
-            "Consequence": ["None"]
+            "Consequence": 0,
+            "DailiesDue": 0,
+            "DailiesDone": 0
         }
     ]
 }

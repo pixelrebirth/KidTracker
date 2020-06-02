@@ -1,12 +1,15 @@
 param (
-    $FilePath = "$PSScriptRoot/Databases/Test.db"
+    $FilePath = "$PSScriptRoot\Databases\Test.db"
 )
 
 Import-Module pslitedb
 . $PSScriptRoot/Classes/Public.ps1
+$UserName = "TestDatabase"
 
-Remove-Item $FilePath -Force
-$Credential = Get-StoredCredential -WarningAction 0 | ? username -eq "testdb"
+Remove-Item $FilePath
+New-StoredCredential -UserName $UserName -Password (New-Guid).guid -EA 0
+
+$Credential = Get-StoredCredential -WarningAction 0 | ? UserName -eq $UserName
 $Database = New-Object Database -ArgumentList ($FilePath,$Credential)
 
 $Collections = @(
